@@ -39,8 +39,11 @@ function obj:start()
         modal:enter()
       else
         self.filter = hs.window.filter.new(app)
-        self.filter:subscribe(hs.window.filter.windowFocused, function() modal:enter() end)
-        self.filter:subscribe(hs.window.filter.windowUnfocused, function() modal:exit() end)
+        self.filter:subscribe({
+          windowFocused = function() modal:enter() end,
+          windowUnfocused = function() modal:exit() end,
+          windowDestroyed = function() modal:exit() end,
+        })
       end
     end
   end
