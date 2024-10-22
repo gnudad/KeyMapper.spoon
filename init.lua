@@ -10,7 +10,14 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 function obj:init()
   self.modals = {}
-  self.filter = nil
+  self.watcher = hs.application.watcher.new(function(name, event, app)
+    if self.modals[name] == nil then return end
+    if (event == hs.application.watcher.activated) then
+      self.modals[name]:enter()
+    elseif (event == hs.application.watcher.deactivated) then
+      self.modals[name]:exit()
+    end
+  end)
   return self
 end
 
@@ -31,27 +38,14 @@ function obj:bindHotkeys(mapping)
 end
 
 function obj:start()
-  if self.filter then
-    self.filter:resume()
-  else
-    for app, modal in pairs(self.modals) do
-      if app == "default" then
-        modal:enter()
-      else
-        self.filter = hs.window.filter.new(app)
-        self.filter:subscribe({
-          windowFocused = function() modal:enter() end,
-          windowUnfocused = function() modal:exit() end,
-          windowDestroyed = function() modal:exit() end,
-        })
-      end
-    end
-  end
+  self.modals["default"]:enter()
+  self.watcher:start()
   return self
 end
 
 function obj:stop()
-  self.filter:pause()
+  self.modals["default"]:exit()
+  self.watcher:stop()
   return self
 end
 
